@@ -1,62 +1,150 @@
-Hospital Emergency Manager (C++ Project)
+🏥 Hospital Emergency Queue Manager (Single Queue Priority System)
 
-This project is a console-based Hospital Emergency Management System developed in C++. It simulates a real-world emergency queue by using a priority queue to manage patients based on condition severity. The system allows users to add patients, treat the most critical case first, view the entire waiting list, search for specific patients, and monitor the total number of patients waiting.
+This project implements a hospital emergency management system using only one queue in C++.
+Patients are inserted into the queue based on priority (severity) while still preserving FIFO order for patients with the same severity.
 
-Features
+📌 Features
+✅ Add Patient
 
-Manages patient data including name, age, medical problem, and severity level.
+Takes name, age, problem, and severity
 
-Uses a priority queue to ensure critical patients are treated first.
+Severity levels:
 
-Allows adding new patients with validated input.
-
-Displays all waiting patients in a formatted table.
-
-Treats the highest priority patient automatically.
-
-Counts total patients currently in the emergency queue.
-
-Supports searching for a patient by name.
-
-Provides clean input handling to avoid crashes or incorrect entries.
-
-Uses a simple, clear, and user-friendly console interface.
-
-How the System Works
-
-Severity levels determine priority:
-
-1 → Critical
+1 → Critical (highest priority)
 
 2 → Serious
 
-3 → Normal
+3 → Normal (lowest priority)
 
-Patients with lower severity numbers are treated before others.
+✅ Single Queue Priority Handling
 
-The system continuously runs in a loop until the user chooses to exit.
+Even though only one queue is used, the system maintains correct order:
 
-Technologies Used
+Higher priority patients always come first
 
-C++ Standard Library
+For equal priority, the patient who arrived first is served first (FIFO)
 
-Priority Queue
+✅ Treat Patient
 
-String Handling
+Treats (pops) the patient at the front of the queue — always the highest priority.
 
-Console I/O
+✅ Display All Patients
 
-Data Formatting (iomanip)
+Shows a formatted table with:
 
-Compilation and Execution
+Name
 
-Compile using any standard C++ compiler such as g++, clang++, or Visual Studio.
+Age
 
-Example command:
+Severity
 
-g++ main.cpp -o emergency
-./emergency
+Problem
 
-Project Purpose
+✅ Count Patients
 
-This program demonstrates the practical use of priority queues in managing real-time tasks, making it ideal for students learning data structures or for academic project submissions. It provides a realistic simulation of hospital emergency handling with clean structure and readable output.
+Displays the total number of patients.
+
+✅ Search Patient
+
+Search by name inside the queue.
+
+🧠 How Priority is Managed With One Queue
+
+A normal queue works only in FIFO.
+But priority requires higher-severity patients to come earlier.
+
+To solve this, we use:
+
+⭐ Manual priority insertion
+
+When adding a patient:
+
+We remove all existing elements from the main queue one-by-one.
+
+We insert the new patient before any patient with lower priority.
+
+If severity is the same, we insert after them → maintains FIFO.
+
+Remaining patients are pushed after that.
+
+The temporary queue becomes the new queue.
+
+This simulates a priority system using a simple queue.
+
+🧪 Example of Insertion Logic
+
+If the queue has:
+
+Name	Severity
+John	1
+Alex	1
+Raj	2
+
+And we add Sam with severity 2:
+
+Sam will be inserted after Raj?
+NO — because Raj has the same severity.
+
+Sam will be placed:
+
+After the severity 1 group
+
+At the end of severity 2 group
+
+New queue:
+
+Name	Severity
+John	1
+Alex	1
+Raj	2
+Sam	2
+📂 Project Structure
+HospitalQueue.cpp   // Main program
+README.md           // Documentation
+
+▶️ How to Run
+Compile
+g++ HospitalQueue.cpp -o hospital
+
+Run
+./hospital
+
+📜 Menu Options
+1. Add Patient
+2. Display All Patients
+3. Treat Next Patient
+4. Count Patients
+5. Search Patient
+6. Exit
+
+🛠 Technologies Used
+
+C++
+
+<queue> STL container
+
+Manual priority logic with FIFO preservation
+
+🎯 Learning Outcomes
+
+Implementing priority systems using a normal queue
+
+FIFO + Priority hybrid logic
+
+Queue manipulation techniques
+
+Struct-based data handling
+
+Formatted table output in C++
+
+📌 Future Enhancements
+
+Delete a specific patient
+
+Edit patient details
+
+Save data to file
+
+Colorful terminal output
+
+Time-stamping patients
