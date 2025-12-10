@@ -1,214 +1,164 @@
 #include <iostream>
 #include <queue>
-#include <stack>
 #include <string>
-#include <iomanip>  
+#include <iomanip>
 using namespace std;
 
-// Patient structure
 struct Patient {
     string name;
     int age;
     string problem;
+    int severity;   // 1 = Critical, 2 = Serious, 3 = Normal
 };
 
-// Global queues
-queue<Patient> criticalQ;
-queue<Patient> seriousQ;
-queue<Patient> normalQ;
+queue<Patient> q;
 
-// Function to safely display a queue with numbering and totals
-
-void displayQueue(queue<Patient> &q, string title) {
-    cout << "\n--- " << title << " ---\n";
-
-    if (q.empty()) {
-        cout << "No patients.\n";
-        cout << "Total patients in this stage = 0\n";
-        return;
-    }
-
-    stack<Patient> tempStack;
-    int count = 0;
-
-    // Print table header
-    cout << "+-----+----------------------+-------+------------------------+\n";
-    cout << "| No. | Name                 | Age   | Problem                |\n";
-    cout << "+-----+----------------------+-------+------------------------+\n";
-
-    // Process queue
-    while (!q.empty()) {
-        Patient p = q.front();
-        q.pop();
-        tempStack.push(p);
-
-        count++;
-
-        // C++ formatted table row
-        cout << "| " << setw(3) << left << count
-             << " | " << setw(20) << left << p.name
-             << " | " << setw(5) << left << p.age
-             << " | " << setw(22) << left << p.problem
-             << " |\n";
-    }
-
-    cout << "+-----+----------------------+-------+------------------------+\n";
-    cout << "Total patients in this stage = " << count << "\n";
-
-    // Restore the queue
-    while (!tempStack.empty()) {
-        q.push(tempStack.top());
-        tempStack.pop();
-    }
-}
-
-// Add a new patient
+// Insert patient into correct priority position inside ONE queue
 void addPatient() {
     Patient p;
-    int severity;
+    string temp;
 
-    cout << "\nEnter patient name: ";
-    cin.ignore();               // Clear buffer BEFORE getline
+    cout << "\nEnter name: ";
     getline(cin, p.name);
 
     cout << "Enter age: ";
-    cin >> p.age;
+    getline(cin, temp);
+    p.age = stoi(temp);
 
     cout << "Enter problem: ";
-    cin.ignore();               // Clear buffer again for next getline
     getline(cin, p.problem);
 
-    cout << "Enter severity (1 = Critical, 2 = Serious, 3 = Normal): ";
-    cin >> severity;
+    do {
+        cout << "Enter severity (1=Critical, 2=Serious, 3=Normal): ";
+        getline(cin, temp);
+    } while (temp != "1" && temp != "2" && temp != "3");
 
-    if (severity == 1) {
-        criticalQ.push(p);
-        cout << "Patient added to CRITICAL queue.\n";
+    p.severity = stoi(temp);
+
+    // Temporary queue to reorder
+    queue<Patient> tempQ;
+
+    bool inserted = false;
+
+    // Move existing patients and insert at correct priority position
+    while (!q.empty()) {
+        Patient cur = q.front();
+        q.pop();
+
+        // If current patient has LOWER priority, insert new patient before it
+        if (!inserted && cur.severity > p.severity) {
+            tempQ.push(p);
+            inserted = true;
+        }
+
+        tempQ.push(cur);
     }
-    else if (severity == 2) {
-        seriousQ.push(p);
-        cout << "Patient added to SERIOUS queue.\n";
-    }
-    else {
-        normalQ.push(p);
-        cout << "Patient added to NORMAL queue.\n";
-    }
+
+    // If not inserted yet, push at end
+    if (!inserted) tempQ.push(p);
+
+    q = tempQ;
+
+    cout << "\nPatient added with priority.\n";
 }
 
-
-// Treat next patient based on priority
+// Treat patient
 void treatPatient() {
-    if (!criticalQ.empty()) {
-        Patient p = criticalQ.front();
-        criticalQ.pop();
-        cout << "\nTreating CRITICAL patient: " << p.name << endl;
-    }
-    else if (!seriousQ.empty()) {
-        Patient p = seriousQ.front();
-        seriousQ.pop();
-        cout << "\nTreating SERIOUS patient: " << p.name << endl;
-    }
-    else if (!normalQ.empty()) {
-        Patient p = normalQ.front();
-        normalQ.pop();
-        cout << "\nTreating NORMAL patient: " << p.name << endl;
-    }
-    else {
+    if (q.empty()) {
         cout << "\nNo patients to treat.\n";
+        return;
     }
+
+    Patient p = q.front();
+    q.pop();
+
+    string s = (p.severity == 1 ? "Critical" :
+                p.severity == 2 ? "Serious" : "Normal");
+
+    cout << "\nTreating " << s << " patient: " << p.name << endl;
 }
 
-// Display all patients in priority order
-void displayAllPatients() {
-    cout << "\n===== CURRENT PATIENT LIST =====\n";
+// Display all patients
+void displayAll() {
+    if (q.empty()) {
+        cout << "\nNo patients.\n";
+        return;
+    }
 
-    displayQueue(criticalQ, "Critical Queue");
-    displayQueue(seriousQ, "Serious Queue");
-    displayQueue(normalQ, "Normal Queue");
+    queue<Patient> temp = q;
+    int count = 1;
 
-    int total = criticalQ.size() + seriousQ.size() + normalQ.size();
-    cout << "\n*** Total patients waiting: " << total << " ***\n";
+    cout << "\n======== PATIENT LIST ========\n";
+    cout << "+-----+----------------------+-------+------------+-------------------+\n";
+    cout << "| No. | Name                 | Age   | Severity   | Problem           |\n";
+    cout << "+-----+----------------------+-------+------------+-------------------+\n";
+
+    while (!temp.empty()) {
+        Patient p = temp.front();
+        temp.pop();
+
+        string s = (p.severity == 1 ? "Critical" :
+                    p.severity == 2 ? "Serious" : "Normal");
+
+        cout << "| " << setw(3) << left << count++
+             << " | " << setw(20) << left << p.name
+             << " | " << setw(5) << left << p.age
+             << " | " << setw(10) << left << s
+             << " | " << setw(17) << left << p.problem
+             << " |\n";
+    }
+
+    cout << "+-----+----------------------+-------+------------+-------------------+\n";
 }
 
-// Search patient by name in all queues
+// Count patients
+void countPatients() {
+    cout << "\nTotal patients: " << q.size() << endl;
+}
+
+// Search
 void searchPatient() {
     string name;
-    cout << "\nEnter patient name to search: ";
-    cin >> name;
+    cout << "\nEnter name to search: ";
+    getline(cin, name);
 
+    queue<Patient> temp = q;
     bool found = false;
 
-    auto searchInQueue = [&](queue<Patient> &q, string category) {
-        stack<Patient> temp;
-        while (!q.empty()) {
-            Patient p = q.front(); 
-            q.pop();
+    while (!temp.empty()) {
+        Patient p = temp.front();
+        temp.pop();
 
-            if (p.name == name) {
-                cout << "\nFound in " << category << " queue:\n";
-                cout << "Name: " << p.name << ", Age: " << p.age 
-                     << ", Problem: " << p.problem << endl;
-                found = true;
-            }
-            temp.push(p);
+        if (p.name == name) {
+            cout << "\nFound: " << p.name 
+                 << " (Severity " << p.severity 
+                 << ", Problem: " << p.problem << ")\n";
+            found = true;
         }
-        while (!temp.empty()) {
-            q.push(temp.top());
-            temp.pop();
-        }
-    };
+    }
 
-    searchInQueue(criticalQ, "CRITICAL");
-    searchInQueue(seriousQ, "SERIOUS");
-    searchInQueue(normalQ, "NORMAL");
-
-    if (!found)
-        cout << "\nPatient not found.\n";
+    if (!found) cout << "\nPatient not found.\n";
 }
 
-// Count all patients waiting
-void countPatients() {
-    int criticalCount = criticalQ.size();
-    int seriousCount = seriousQ.size();
-    int normalCount = normalQ.size();
-
-    int total = criticalCount + seriousCount + normalCount;
-
-    cout << "\n===== PATIENT COUNT =====\n";
-    cout << "Critical: " << criticalCount << endl;
-    cout << "Serious: " << seriousCount << endl;
-    cout << "Normal: " << normalCount << endl;
-    cout << "---------------------------\n";
-    cout << "Total waiting patients: " << total << endl;
-}
-
-// Main menu
 int main() {
-    int choice;
-
     while (true) {
-        cout << "\n==============================\n";
-        cout << " Hospital Emergency Manager\n";
-        cout << "==============================\n";
+        cout << "\n========== HOSPITAL MANAGER ==========\n";
         cout << "1. Add Patient\n";
-        cout << "2. Display All Patients\n";
-        cout << "3. Treat Next Patient\n";
-        cout << "4. Show Remaining Patients\n";
-        cout << "5. Count Patients\n";
-        cout << "6. Search Patient by Name\n";
-        cout << "7. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
+        cout << "2. Display\n";
+        cout << "3. Treat\n";
+        cout << "4. Count\n";
+        cout << "5. Search\n";
+        cout << "6. Exit\n";
+        cout << "Enter choice: ";
 
-        switch (choice) {
-            case 1: addPatient(); break;
-            case 2: displayAllPatients(); break;
-            case 3: treatPatient(); break;
-            case 4: displayAllPatients(); break;
-            case 5: countPatients(); break;
-            case 6: searchPatient(); break;
-            case 7: cout << "Exiting...\n"; return 0;
-            default: cout << "Invalid choice. Try again.\n";
-        }
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") addPatient();
+        else if (choice == "2") displayAll();
+        else if (choice == "3") treatPatient();
+        else if (choice == "4") countPatients();
+        else if (choice == "5") searchPatient();
+        else if (choice == "6") break;
     }
 }
